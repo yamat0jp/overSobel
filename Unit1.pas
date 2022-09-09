@@ -65,7 +65,7 @@ end;
 procedure TForm2.FileOpen1Accept(Sender: TObject);
 begin
   Action1Execute(Sender);
-//  subproc;
+  subproc;
 end;
 
 procedure TForm2.proc(src1, src2: PIplImage);
@@ -115,7 +115,7 @@ begin
   bmp := Image1.Picture.Bitmap;
   bmp.PixelFormat := pf24bit;
   src := BitmapToIplImage(bmp);
-  cvCloneImage(src);
+  dst := cvCloneImage(src);
   try
     cvSmooth(src, dst, CV_GAUSSIAN, 3, 3);
     IplImage2Bitmap(dst, bmp);

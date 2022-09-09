@@ -23,14 +23,20 @@ type
     Action1: TAction;
     Image1: TImage;
     FileOpen1: TFileOpen;
+    FileOpen2: TFileOpen;
+    FileOpen3: TFileOpen;
     procedure Action1Execute(Sender: TObject);
     procedure FileOpen1Accept(Sender: TObject);
+    procedure FileOpen2Accept(Sender: TObject);
+    procedure FileOpen3Accept(Sender: TObject);
   private
     { Private êÈåæ }
   public
     { Public êÈåæ }
     procedure proc(src1, src2: PIplImage);
+    procedure proc2(src1, src2: PIplImage);
     procedure subproc;
+    procedure toBitmap(img: PIplImage);
   end;
 
 var
@@ -47,14 +53,17 @@ var
 begin
   name := AnsiString(FileOpen1.Dialog.FileName);
   img := cvLoadImage(PAnsiChar(name), CV_LOAD_IMAGE_GRAYSCALE);
+  if not Assigned(img) then
+    Exit;
+  dst1 := cvCloneImage(img);
+  dst2 := cvCloneImage(img);
   try
-    if not Assigned(img) then
-      Exit;
-    dst1 := cvCloneImage(img);
-    dst2 := cvCloneImage(img);
     cvSmooth(img, dst1, CV_GAUSSIAN, 15, 15);
     cvSmooth(img, dst2, CV_GAUSSIAN, 3, 3);
-    proc(dst1, dst2);
+    if Sender = nil then
+      proc2(dst1, dst2)
+    else
+      proc(dst1, dst2);
   finally
     cvReleaseImage(img);
     cvReleaseImage(dst1);
@@ -64,8 +73,49 @@ end;
 
 procedure TForm2.FileOpen1Accept(Sender: TObject);
 begin
-  Action1Execute(Sender);
-  subproc;
+  {
+    Action1Execute(Sender);
+    subproc; }
+  Action1Execute(nil);
+end;
+
+procedure TForm2.FileOpen2Accept(Sender: TObject);
+var
+  src, dst: PIplImage;
+  name: AnsiString;
+begin
+  name := AnsiString(FileOpen2.Dialog.FileName);
+  src := cvLoadImage(PAnsiChar(name), CV_LOAD_IMAGE_GRAYSCALE);
+  if not Assigned(src) then
+    Exit;
+  dst:=cvCloneImage(src);
+  try
+    cvThreShold(src, dst, 160, 255, CV_THRESH_BINARY);
+//    cvFindContours(dst,
+    toBitmap(dst);
+  finally
+    cvReleaseImage(src);
+    cvReleaseImage(dst);
+  end;
+end;
+
+procedure TForm2.FileOpen3Accept(Sender: TObject);
+var
+  src, dst: PIplImage;
+  name: AnsiString;
+begin
+  name := AnsiString(FileOpen3.Dialog.FileName);
+  src := cvLoadImage(PAnsiChar(name), CV_LOAD_IMAGE_GRAYSCALE);
+  if not Assigned(src) then
+    Exit;
+  dst := cvCloneImage(src);
+  try
+    cvThreShold(src, dst, 160, 255, CV_THRESH_BINARY);
+    toBitmap(dst);
+  finally
+    cvReleaseImage(src);
+    cvReleaseImage(dst);
+  end;
 end;
 
 procedure TForm2.proc(src1, src2: PIplImage);
@@ -107,6 +157,38 @@ begin
   end;
 end;
 
+procedure TForm2.proc2(src1, src2: PIplImage);
+var
+  wid: integer;
+  gray: Byte;
+  bmp: TBitmap;
+  ch: integer;
+  x: integer;
+  tmp: PIplImage;
+begin
+  tmp := cvCloneImage(src1);
+  bmp := TBitmap.Create;
+  try
+    wid := src1^.WidthStep;
+    ch := src1^.nChannels;
+    for var i := 1 to src1^.Height do
+      for var j := 1 to src1^.Width do
+      begin
+        x := (i - 1) * wid + (j - 1) * ch;
+        gray := src1^.ImageData[x] - src2^.ImageData[x];
+        tmp^.ImageData[x] := gray;
+        tmp^.ImageData[x + 1] := gray;
+        tmp^.ImageData[x + 2] := gray;
+      end;
+    bmp.PixelFormat := pf24bit;
+    IplImage2Bitmap(tmp, bmp);
+    Image1.Picture.Assign(bmp);
+  finally
+    bmp.Free;
+    cvReleaseImage(tmp);
+  end;
+end;
+
 procedure TForm2.subproc;
 var
   src, dst: PIplImage;
@@ -122,6 +204,19 @@ begin
   finally
     cvReleaseImage(src);
     cvReleaseImage(dst);
+  end;
+end;
+
+procedure TForm2.toBitmap(img: PIplImage);
+var
+  bmp: TBitmap;
+begin
+  bmp := TBitmap.Create;
+  try
+    IplImage2Bitmap(img, bmp);
+    Image1.Picture.Assign(bmp);
+  finally
+    bmp.Free;
   end;
 end;
 

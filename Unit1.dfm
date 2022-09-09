@@ -53,6 +53,18 @@ object Form2: TForm2
             Action = FileOpen1
             ImageIndex = 7
             ShortCut = 16463
+          end
+          item
+            Action = FileOpen2
+            Caption = #38283#12367'(&Z)...'
+            ImageIndex = 7
+            ShortCut = 16463
+          end
+          item
+            Action = FileOpen3
+            Caption = #38283#12367'(&Y)...'
+            ImageIndex = 7
+            ShortCut = 16463
           end>
         ActionBar = ActionToolBar1
       end>
@@ -71,6 +83,25 @@ object Form2: TForm2
       ImageIndex = 7
       ShortCut = 16463
       OnAccept = FileOpen1Accept
+    end
+    object FileOpen2: TFileOpen
+      Category = #12501#12449#12452#12523
+      Caption = #38283#12367'(&O)...'
+      Dialog.Filter = 'JPEG(*.jpeg)|*jpg;*.jpeg'
+      Dialog.InitialDir = 'c:\delphi-opencv-master\resource\media'
+      Hint = #38283#12367'|'#26082#23384#12398#12501#12449#12452#12523#12434#38283#12365#12414#12377
+      ImageIndex = 7
+      ShortCut = 16463
+      OnAccept = FileOpen2Accept
+    end
+    object FileOpen3: TFileOpen
+      Category = #12501#12449#12452#12523
+      Caption = #38283#12367'(&O)...'
+      Dialog.Filter = 'JPEG|*.jpg;*.jpeg'
+      Hint = #38283#12367'|'#26082#23384#12398#12501#12449#12452#12523#12434#38283#12365#12414#12377
+      ImageIndex = 7
+      ShortCut = 16463
+      OnAccept = FileOpen3Accept
     end
   end
 end

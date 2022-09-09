@@ -1,0 +1,72 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{FF337DC1-7E9C-41C1-899F-68D4C24F0027}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="CV.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="C:\Delphi-OpenCV-master\samples\VCLDemo\vclCameraCapture\VCLCameraCapture.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="C:\Delphi-OpenCV-master\samples\LibDemo\cvSmooth\cv_Smooth.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="C:\Delphi-OpenCV-master\samples\MultiDemo\art\art.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="CV">
+        <MSBuild Projects="CV.dproj"/>
+    </Target>
+    <Target Name="CV:Clean">
+        <MSBuild Projects="CV.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CV:Make">
+        <MSBuild Projects="CV.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="VCLCameraCapture">
+        <MSBuild Projects="C:\Delphi-OpenCV-master\samples\VCLDemo\vclCameraCapture\VCLCameraCapture.dproj"/>
+    </Target>
+    <Target Name="VCLCameraCapture:Clean">
+        <MSBuild Projects="C:\Delphi-OpenCV-master\samples\VCLDemo\vclCameraCapture\VCLCameraCapture.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCLCameraCapture:Make">
+        <MSBuild Projects="C:\Delphi-OpenCV-master\samples\VCLDemo\vclCameraCapture\VCLCameraCapture.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="cv_Smooth">
+        <MSBuild Projects="C:\Delphi-OpenCV-master\samples\LibDemo\cvSmooth\cv_Smooth.dproj"/>
+    </Target>
+    <Target Name="cv_Smooth:Clean">
+        <MSBuild Projects="C:\Delphi-OpenCV-master\samples\LibDemo\cvSmooth\cv_Smooth.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="cv_Smooth:Make">
+        <MSBuild Projects="C:\Delphi-OpenCV-master\samples\LibDemo\cvSmooth\cv_Smooth.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="art">
+        <MSBuild Projects="C:\Delphi-OpenCV-master\samples\MultiDemo\art\art.dproj"/>
+    </Target>
+    <Target Name="art:Clean">
+        <MSBuild Projects="C:\Delphi-OpenCV-master\samples\MultiDemo\art\art.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="art:Make">
+        <MSBuild Projects="C:\Delphi-OpenCV-master\samples\MultiDemo\art\art.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="CV;VCLCameraCapture;cv_Smooth;art"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="CV:Clean;VCLCameraCapture:Clean;cv_Smooth:Clean;art:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="CV:Make;VCLCameraCapture:Make;cv_Smooth:Make;art:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

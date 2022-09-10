@@ -213,6 +213,7 @@ var
 begin
   bmp := TBitmap.Create;
   try
+    bmp.PixelFormat:=pf24bit;
     IplImage2Bitmap(img, bmp);
     Image1.Picture.Assign(bmp);
   finally

@@ -93,18 +93,13 @@ begin
     Exit;
   dst := cvCloneImage(src);
   try
-//    cvThreShold(src, src, 160, 255, CV_THRESH_BINARY);
+    cvThreShold(src, src, 127, 255, CV_THRESH_BINARY);
     seq := cvCreateSeq(0, SizeOf(TCvContour),
       SizeOf(TCvPoint) * 2, cvCreateMemStorage);
     cvFindContours(src, cvCreateMemStorage, seq, SizeOf(TCvContour), CV_RETR_LIST,
       CV_CHAIN_APPROX_SIMPLE, cvPoint(0, 0));
     color := CV_RGB(0, 0, 255);
-    for var i := 0 to seq^.total - 1 do
-    begin
-      r := cvBoundingRect(seq, i);
-      cvRectAngle(dst, cvPoint(r.x, r.y), cvPoint(r.x + r.width,
-        r.y + r.height), color);
-    end;
+    cvDrawContours(dst, seq, color, color, 0, 1, 8, cvPoint(0,0));
     toBitmap(dst);
   finally
     cvReleaseImage(src);

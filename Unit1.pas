@@ -82,20 +82,39 @@ end;
 procedure TForm2.FileOpen2Accept(Sender: TObject);
 var
   src, dst: PIplImage;
+  seq: PCvSeq;
+  color: TCvScalar;
+  r: TCvRect;
   name: AnsiString;
 begin
   name := AnsiString(FileOpen2.Dialog.FileName);
   src := cvLoadImage(PAnsiChar(name), CV_LOAD_IMAGE_GRAYSCALE);
   if not Assigned(src) then
     Exit;
-  dst:=cvCloneImage(src);
+  dst := cvCloneImage(src);
   try
-    cvThreShold(src, dst, 160, 255, CV_THRESH_BINARY);
-//    cvFindContours(dst,
+    cvThreShold(src, src, 160, 255, CV_THRESH_BINARY);
+    seq := cvCreateSeq(0, SizeOf(TCvSeq), SizeOf(TCvPoint) * 2,
+      cvCreateMemStorage);
+    cvFindContours(src, cvCreateChildMemStorage(seq^.storage), seq,
+      SizeOf(TCvSeq), CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0, 0));
+    color := CV_RGB(0, 0, 255);
+    for var i := 0 to seq^.total - 1 do
+    begin
+      r := cvBoundingRect(seq, i);
+      cvRectAngle(dst, cvPoint(r.x, r.y), cvPoint(r.x + r.width,
+        r.y + r.height), color);
+    end;
     toBitmap(dst);
   finally
     cvReleaseImage(src);
     cvReleaseImage(dst);
+    cvReleaseMemStorage(seq^.storage);
+    while Assigned(seq^.h_next) do
+    begin
+      seq := seq^.h_next;
+      cvReleaseMemStorage(seq^.storage);
+    end;
   end;
 end;
 
@@ -136,12 +155,12 @@ begin
     IplImage2Bitmap(src1, bmp1);
     IplImage2Bitmap(src2, bmp2);
     tmp.Assign(bmp1);
-    for var i := 0 to bmp1.Height - 1 do
+    for var i := 0 to bmp1.height - 1 do
     begin
       p1 := bmp1.ScanLine[i];
       p2 := bmp2.ScanLine[i];
       q := tmp.ScanLine[i];
-      for var j := 0 to bmp1.Width - 1 do
+      for var j := 0 to bmp1.width - 1 do
       begin
         gray := -p1[j].rgbtBlue + p2[j].rgbtBlue;
         q[j].rgbtBlue := gray;
@@ -171,8 +190,8 @@ begin
   try
     wid := src1^.WidthStep;
     ch := src1^.nChannels;
-    for var i := 1 to src1^.Height do
-      for var j := 1 to src1^.Width do
+    for var i := 1 to src1^.height do
+      for var j := 1 to src1^.width do
       begin
         x := (i - 1) * wid + (j - 1) * ch;
         gray := src1^.ImageData[x] - src2^.ImageData[x];
@@ -213,7 +232,7 @@ var
 begin
   bmp := TBitmap.Create;
   try
-    bmp.PixelFormat:=pf24bit;
+    bmp.PixelFormat := pf24bit;
     IplImage2Bitmap(img, bmp);
     Image1.Picture.Assign(bmp);
   finally

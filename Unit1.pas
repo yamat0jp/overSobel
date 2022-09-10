@@ -93,10 +93,10 @@ begin
     Exit;
   dst := cvCloneImage(src);
   try
-    cvThreShold(src, src, 160, 255, CV_THRESH_BINARY);
-    seq := cvCreateSeq(CV_SEQ_ELTYPE_GRAPH_EDGE, SizeOf(TCvSeq),
+//    cvThreShold(src, src, 160, 255, CV_THRESH_BINARY);
+    seq := cvCreateSeq(0, SizeOf(TCvContour),
       SizeOf(TCvPoint) * 2, cvCreateMemStorage);
-    cvFindContours(src, cvCreateMemStorage, seq, SizeOf(TCvSeq), CV_RETR_LIST,
+    cvFindContours(src, cvCreateMemStorage, seq, SizeOf(TCvContour), CV_RETR_LIST,
       CV_CHAIN_APPROX_SIMPLE, cvPoint(0, 0));
     color := CV_RGB(0, 0, 255);
     for var i := 0 to seq^.total - 1 do
@@ -113,7 +113,8 @@ begin
     while Assigned(seq^.h_next) do
     begin
       seq := seq^.h_next;
-      cvReleaseMemStorage(seq^.storage);
+      if Assigned(seq^.storage) then
+        cvReleaseMemStorage(seq^.storage);
     end;
   end;
 end;

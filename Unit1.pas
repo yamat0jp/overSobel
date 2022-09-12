@@ -83,8 +83,8 @@ procedure TForm2.FileOpen2Accept(Sender: TObject);
 var
   src, dst: PIplImage;
   seq: PCvSeq;
+  mem: PCvMemStorage;
   color: TCvScalar;
-  r: TCvRect;
   name: AnsiString;
 begin
   name := AnsiString(FileOpen2.Dialog.FileName);
@@ -92,25 +92,20 @@ begin
   if not Assigned(src) then
     Exit;
   dst := cvCloneImage(src);
+  seq := cvCreateSeq(0, SizeOf(TCvContour), SizeOf(TCvPoint),
+    cvCreateMemStorage);
   try
-    cvThreShold(src, src, 127, 255, CV_THRESH_BINARY);
-    seq := cvCreateSeq(0, SizeOf(TCvContour),
-      SizeOf(TCvPoint) * 2, cvCreateMemStorage);
-    cvFindContours(src, cvCreateMemStorage, seq, SizeOf(TCvContour), CV_RETR_LIST,
+    mem := cvCreateMemStorage;
+    cvFindContours(src, mem, seq, SizeOf(TCvContour), CV_RETR_LIST,
       CV_CHAIN_APPROX_SIMPLE, cvPoint(0, 0));
     color := CV_RGB(0, 0, 255);
-    cvDrawContours(dst, seq, color, color, 0, 1, 8, cvPoint(0,0));
-    toBitmap(dst);
+//    cvDrawContours(dst, seq, color, color, -1, 1, 8, cvPoint(0, 0));
+    toBitmap(src);
   finally
     cvReleaseImage(src);
     cvReleaseImage(dst);
     cvReleaseMemStorage(seq^.storage);
-    while Assigned(seq^.h_next) do
-    begin
-      seq := seq^.h_next;
-      if Assigned(seq^.storage) then
-        cvReleaseMemStorage(seq^.storage);
-    end;
+    cvReleaseMemStorage(mem);
   end;
 end;
 

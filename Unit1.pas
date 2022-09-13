@@ -81,7 +81,7 @@ end;
 
 procedure TForm2.FileOpen2Accept(Sender: TObject);
 var
-  src, dst: PIplImage;
+  src: PIplImage;
   seq: PCvSeq;
   mem: PCvMemStorage;
   color: TCvScalar;
@@ -91,19 +91,15 @@ begin
   src := cvLoadImage(PAnsiChar(name), CV_LOAD_IMAGE_GRAYSCALE);
   if not Assigned(src) then
     Exit;
-  dst := cvCloneImage(src);
   seq := cvCreateSeq(0, SizeOf(TCvContour), SizeOf(TCvPoint),
     cvCreateMemStorage);
   try
     mem := cvCreateMemStorage;
     cvFindContours(src, mem, seq, SizeOf(TCvContour), CV_RETR_LIST,
       CV_CHAIN_APPROX_SIMPLE, cvPoint(0, 0));
-    color := CV_RGB(0, 0, 255);
-//    cvDrawContours(dst, seq, color, color, -1, 1, 8, cvPoint(0, 0));
     toBitmap(src);
   finally
     cvReleaseImage(src);
-    cvReleaseImage(dst);
     cvReleaseMemStorage(seq^.storage);
     cvReleaseMemStorage(mem);
   end;

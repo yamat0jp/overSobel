@@ -15,6 +15,9 @@
         <Projects Include="C:\Delphi-OpenCV-master\samples\MultiDemo\art\art.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Project2.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -59,14 +62,23 @@
     <Target Name="art:Make">
         <MSBuild Projects="C:\Delphi-OpenCV-master\samples\MultiDemo\art\art.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Project2">
+        <MSBuild Projects="Project2.dproj"/>
+    </Target>
+    <Target Name="Project2:Clean">
+        <MSBuild Projects="Project2.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Project2:Make">
+        <MSBuild Projects="Project2.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="CV;VCLCameraCapture;cv_Smooth;art"/>
+        <CallTarget Targets="CV;VCLCameraCapture;cv_Smooth;art;Project2"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="CV:Clean;VCLCameraCapture:Clean;cv_Smooth:Clean;art:Clean"/>
+        <CallTarget Targets="CV:Clean;VCLCameraCapture:Clean;cv_Smooth:Clean;art:Clean;Project2:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="CV:Make;VCLCameraCapture:Make;cv_Smooth:Make;art:Make"/>
+        <CallTarget Targets="CV:Make;VCLCameraCapture:Make;cv_Smooth:Make;art:Make;Project2:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -34,9 +34,9 @@ type
   public
     { Public êÈåæ }
     procedure proc(src1, src2: PIplImage);
-    procedure proc2(src1, src2: PIplImage);
     procedure subproc;
     procedure toBitmap(img: PIplImage);
+    procedure Add(src, dst: PIplImage);
   end;
 
 var
@@ -45,6 +45,41 @@ var
 implementation
 
 {$R *.dfm}
+
+// è¨Ç≥Ç¢ïîï™ÇÃè¡ãé
+function remove_small_objects(img_in: PIplImage; size: integer): PIplImage;
+var
+  img_out: PIplImage;
+  s_storage: pCvMemStorage;
+  s_contours: pCvSeq;
+  black, white: TCvScalar;
+  area: double;
+begin
+  img_out := cvCloneImage(img_in);
+  s_storage := cvCreateMemStorage(0);
+  s_contours := nil;
+  black := CV_RGB(0, 0, 0);
+  white := CV_RGB(255, 255, 255);
+  s_contours := AllocMem(SizeOf(TCvSeq));
+  cvClearMemStorage(s_storage);
+  cvFindContours(img_in, s_storage, @s_contours, SizeOf(TCvContour),
+    CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0, 0));
+  while (s_contours <> nil) do
+  begin
+    area := cvContourArea(s_contours, CV_WHOLE_SEQ);
+    if abs(area) <= size then
+      cvDrawContours(img_out, s_contours, black, black, -1, CV_FILLED, 8,
+        cvPoint(0, 0))
+    else
+      cvDrawContours(img_out, s_contours, white, white, -1, CV_FILLED, 8,
+        cvPoint(0, 0));
+    s_contours := s_contours.h_next;
+  end;
+  cvReleaseMemStorage(s_storage);
+  s_contours := nil;
+  FreeMem(s_contours, SizeOf(TCvSeq));
+  result := img_out;
+end;
 
 procedure TForm2.Action1Execute(Sender: TObject);
 var
@@ -60,15 +95,29 @@ begin
   try
     cvSmooth(img, dst1, CV_GAUSSIAN, 15, 15);
     cvSmooth(img, dst2, CV_GAUSSIAN, 3, 3);
-    if Sender = nil then
-      proc2(dst1, dst2)
-    else
-      proc(dst1, dst2);
+    proc(dst1, dst2)
   finally
     cvReleaseImage(img);
     cvReleaseImage(dst1);
     cvReleaseImage(dst2);
   end;
+end;
+
+procedure TForm2.Add(src, dst: PIplImage);
+var
+  wid, ch, k: integer;
+begin
+  wid := src^.widthStep;
+  ch := src^.nChannels;
+  for var i := 0 to src^.height - 1 do
+    for var j := 0 to src^.width - 1 do
+      if src^.imageData[i * wid + j * ch] > 10 then
+      begin
+        k := i * wid + j * ch;
+        dst^.imageData[k] := 0;
+        dst^.imageData[k + 1] := 0;
+        dst^.imageData[k + 2] := 255;
+      end;
 end;
 
 procedure TForm2.FileOpen1Accept(Sender: TObject);
@@ -81,27 +130,35 @@ end;
 
 procedure TForm2.FileOpen2Accept(Sender: TObject);
 var
-  src: PIplImage;
-  seq: PCvSeq;
-  mem: PCvMemStorage;
-  color: TCvScalar;
+  src, dst: PIplImage;
+  seq: pCvSeq;
+  mem: pCvMemStorage;
   name: AnsiString;
+  r: TCvRect;
 begin
   name := AnsiString(FileOpen2.Dialog.FileName);
   src := cvLoadImage(PAnsiChar(name), CV_LOAD_IMAGE_GRAYSCALE);
   if not Assigned(src) then
     Exit;
-  seq := cvCreateSeq(0, SizeOf(TCvContour), SizeOf(TCvPoint),
-    cvCreateMemStorage);
+  dst := cvCloneImage(src);
+  mem := cvCreateMemStorage;
+  seq := AllocMem(SizeOf(TCvSeq));
+  cvClearMemStorage(mem);
   try
-    mem := cvCreateMemStorage;
     cvFindContours(src, mem, seq, SizeOf(TCvContour), CV_RETR_LIST,
       CV_CHAIN_APPROX_SIMPLE, cvPoint(0, 0));
-    toBitmap(src);
+    for var i := 0 to seq^.total - 1 do
+    begin
+      r := cvBoundingRect(seq, i);
+      cvRectAngle(dst, cvPoint(r.x, r.y), cvPoint(r.x + r.width,
+        r.y + r.height), cvSCalar(255, 255, 0, 0), 2, 8, 0);
+    end;
+    toBitmap(dst);
   finally
     cvReleaseImage(src);
-    cvReleaseMemStorage(seq^.storage);
+    cvReleaseImage(dst);
     cvReleaseMemStorage(mem);
+    FreeMem(seq, SizeOf(TCvSeq));
   end;
 end;
 
@@ -125,67 +182,16 @@ begin
 end;
 
 procedure TForm2.proc(src1, src2: PIplImage);
-type
-  TRGBArray = array [Word] of TRGBTriple;
 var
-  bmp1, bmp2, tmp: TBitmap;
-  p1, p2, q: ^TRGBArray;
-  gray: Byte;
-begin
-  bmp1 := TBitmap.Create;
-  bmp2 := TBitmap.Create;
-  tmp := TBitmap.Create;
-  try
-    bmp1.PixelFormat := pf24bit;
-    bmp2.PixelFormat := pf24bit;
-    tmp.PixelFormat := pf24bit;
-    IplImage2Bitmap(src1, bmp1);
-    IplImage2Bitmap(src2, bmp2);
-    tmp.Assign(bmp1);
-    for var i := 0 to bmp1.height - 1 do
-    begin
-      p1 := bmp1.ScanLine[i];
-      p2 := bmp2.ScanLine[i];
-      q := tmp.ScanLine[i];
-      for var j := 0 to bmp1.width - 1 do
-      begin
-        gray := -p1[j].rgbtBlue + p2[j].rgbtBlue;
-        q[j].rgbtBlue := gray;
-        q[j].rgbtGreen := gray;
-        q[j].rgbtRed := gray;
-      end;
-    end;
-    Image1.Picture.Assign(tmp);
-  finally
-    bmp1.Free;
-    bmp2.Free;
-    tmp.Free;
-  end;
-end;
-
-procedure TForm2.proc2(src1, src2: PIplImage);
-var
-  wid: integer;
-  gray: Byte;
   bmp: TBitmap;
-  ch: integer;
-  x: integer;
   tmp: PIplImage;
 begin
   tmp := cvCloneImage(src1);
   bmp := TBitmap.Create;
   try
-    wid := src1^.WidthStep;
-    ch := src1^.nChannels;
-    for var i := 1 to src1^.height do
-      for var j := 1 to src1^.width do
-      begin
-        x := (i - 1) * wid + (j - 1) * ch;
-        gray := src1^.ImageData[x] - src2^.ImageData[x];
-        tmp^.ImageData[x] := gray;
-        tmp^.ImageData[x + 1] := gray;
-        tmp^.ImageData[x + 2] := gray;
-      end;
+    cvAbsDiff(src1, src2, tmp);
+    cvThreShold(tmp, tmp, 10, 255, CV_THRESH_BINARY);
+    tmp := remove_small_objects(tmp, 100);
     bmp.PixelFormat := pf24bit;
     IplImage2Bitmap(tmp, bmp);
     Image1.Picture.Assign(bmp);

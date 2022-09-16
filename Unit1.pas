@@ -34,7 +34,6 @@ type
   public
     { Public êÈåæ }
     procedure proc(src1, src2: PIplImage);
-    procedure subproc;
     procedure toBitmap(img: PIplImage);
     procedure Add(src, dst: PIplImage);
   end;
@@ -122,10 +121,7 @@ end;
 
 procedure TForm2.FileOpen1Accept(Sender: TObject);
 begin
-  {
-    Action1Execute(Sender);
-    subproc; }
-  Action1Execute(nil);
+  Action1Execute(Sender);
 end;
 
 procedure TForm2.FileOpen2Accept(Sender: TObject);
@@ -190,6 +186,7 @@ begin
   bmp := TBitmap.Create;
   try
     cvAbsDiff(src1, src2, tmp);
+//    cvSmooth(tmp, tmp, CV_BLUR);
     cvThreShold(tmp, tmp, 10, 255, CV_THRESH_BINARY);
     tmp := remove_small_objects(tmp, 100);
     bmp.PixelFormat := pf24bit;
@@ -198,24 +195,6 @@ begin
   finally
     bmp.Free;
     cvReleaseImage(tmp);
-  end;
-end;
-
-procedure TForm2.subproc;
-var
-  src, dst: PIplImage;
-  bmp: TBitmap;
-begin
-  bmp := Image1.Picture.Bitmap;
-  bmp.PixelFormat := pf24bit;
-  src := BitmapToIplImage(bmp);
-  dst := cvCloneImage(src);
-  try
-    cvSmooth(src, dst, CV_GAUSSIAN, 3, 3);
-    IplImage2Bitmap(dst, bmp);
-  finally
-    cvReleaseImage(src);
-    cvReleaseImage(dst);
   end;
 end;
 
